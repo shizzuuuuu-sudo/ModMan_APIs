@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-    origin: ["http://localhost:5173", "https://modman-admin.vercel.app"],
+    origin: ["http://localhost:5173", "http://localhost:5174", "https://modman-admin.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
