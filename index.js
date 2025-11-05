@@ -1,13 +1,12 @@
 import express from "express";
-import mongoose from "mongoose";
-import productRoutes from "./routes/productRoutes.js";
-
 const app = express();
-app.use(express.json());
-app.use("/api/products", productRoutes);
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("DB Error:", err.message));
+app.get("/", (req, res) => {
+  res.json({ message: "Hello from Vercel API!" });
+});
 
-export default app; // required for Vercel serverless
+app.listen(5000, () => console.log("Server running on port 5000"));
+
+export default function handler(req, res) {
+  res.status(200).json({ message: "Hello from Vercel Serverless Function!" });
+}
