@@ -1,4 +1,5 @@
 import Product from "../models/ProductModel.js";
+import Category from "../models/catModel.js";
 import path from "path";
 import fs from "fs";
 
