@@ -15,6 +15,16 @@ dotenv.config(); // load .env
 
 const app = express();
 
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://modman-admin.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
+
 // Middleware
 app.use(express.json());
 
