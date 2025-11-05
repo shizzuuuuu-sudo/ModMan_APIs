@@ -22,7 +22,7 @@ export const createProduct = async (req, res) => {
       isLatestTrend,
     } = req.body;
 
-    const image = req.file ? `/uploads/${req.file.filename}` : null;
+    const image = req.file ? req.file.path : null;
 
     // Auto price calculation (rounded)
     let price = oldPrice;
@@ -97,7 +97,7 @@ export const updateProduct = async (req, res) => {
         const oldImagePath = path.join("public", product.image);
         if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
       }
-      updateData.image = `/uploads/${req.file.filename}`;
+      updateData.image = req.file.path;
     }
 
     // Auto price recalculation (rounded)

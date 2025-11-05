@@ -4,7 +4,7 @@ import Category from "../models/catModel.js";
 export const createCategory = async (req, res) => {
   try {
     const { Categoryname } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : null;
+    const image = req.file ? req.file.path : null;
 
     if (!Categoryname || !image) {
       return res.status(400).json({ success: false, message: "Required fields missing" });
@@ -74,7 +74,7 @@ export const updateCategory = async (req, res) => {
 
     // ✅ Update image if a new file was uploaded
     if (req.file) {
-      category.image = `/uploads/${req.file.filename}`;
+      category.image = req.file.path;
     }
 
     await category.save();
