@@ -12,14 +12,7 @@ import {
 } from "../controllers/productController.js";
 
 const productRouter = express.Router();
-
-// Multer setup (single file only)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
-});
-
-const upload = multer({ storage });
+import upload from "../middleware/Upload.js";
 
 // Routes
 productRouter.post("/createProduct", upload.array("image",5), createProduct);
