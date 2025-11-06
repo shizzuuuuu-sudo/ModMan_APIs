@@ -12,7 +12,7 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    // ✅ Create new order document
+    // Create new order document
     const newOrder = new Order({
       userId,
       userDetails,
@@ -42,7 +42,10 @@ export const createOrder = async (req, res) => {
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find({})
-      .populate("items.productId")
+      .populate({
+        path: "items.productId",
+        select: "productName price images", // include images
+      })
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -62,6 +65,7 @@ export const getAllOrders = async (req, res) => {
 
 
 
+
 export const getUserOrders = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -73,7 +77,12 @@ export const getUserOrders = async (req, res) => {
       });
     }
 
-    const orders = await Order.find({ userId }).populate("items.productId");
+    const orders = await Order.find({ userId })
+      .populate({
+        path: "items.productId",
+        select: "productName price images", // include images
+      })
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -88,4 +97,5 @@ export const getUserOrders = async (req, res) => {
     });
   }
 };
+
 

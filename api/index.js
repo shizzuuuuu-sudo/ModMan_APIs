@@ -32,7 +32,7 @@ app.use("/uploads", express.static("uploads"));
 connectDB();
 
 // Routes
-app.use("/uploads", uploadRoutes);
+app.use("/api/images", uploadRoutes);
 app.use("/api", router);
 app.use("/api/admin", Adminrouter);
 app.use("/api/categories", Caterouter);

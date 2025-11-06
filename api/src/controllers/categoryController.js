@@ -1,24 +1,30 @@
 import Category from "../models/catModel.js";
+import cloudinary from "../utils/cloudinary.js";
 
-// Create Category
+// Create Category (Cloudinary Upload)
 export const createCategory = async (req, res) => {
   try {
     const { Categoryname } = req.body;
-    const image = req.file ? req.file.path : null;
-
-    if (!Categoryname || !image) {
-      return res.status(400).json({ success: false, message: "Required fields missing" });
+    if (!Categoryname) {
+      return res.status(400).json({ success: false, message: "Category name required" });
     }
 
-    // 🔍 Check if category already exists
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Image is required" });
+    }
+
+    // 🔍 Check duplicate
     const existingCategory = await Category.findOne({ Categoryname });
     if (existingCategory) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Category name already exists" });
+      return res.status(400).json({ success: false, message: "Category name already exists" });
     }
 
-    const newCategory = new Category({ Categoryname, image });
+    const newCategory = new Category({
+      Categoryname,
+      image: req.file.path, // Cloudinary URL
+      public_id: req.file.filename, // for deletion
+    });
+
     await newCategory.save();
 
     res.status(201).json({ success: true, category: newCategory });
@@ -27,9 +33,6 @@ export const createCategory = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
-
-
 
 // Get All Categories
 export const getCategories = async (req, res) => {
@@ -45,63 +48,71 @@ export const getCategories = async (req, res) => {
 export const getCategoryById = async (req, res) => {
   try {
     const { id } = req.params;
-    const category = await Category.findById(id);
 
+    // validate ObjectId (optional but helpful)
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ success: false, message: "Invalid category id" });
+    }
+
+    const category = await Category.findById(id);
     if (!category) {
       return res.status(404).json({ success: false, message: "Category not found" });
     }
 
     res.status(200).json({ success: true, category });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error });
+    console.error("❌ Get Category By Id Error:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
 
-// Update Category
+
+// Update Category (Replace image in Cloudinary)
 export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const { Categoryname, isActive } = req.body;
-
     const category = await Category.findById(id);
-    if (!category) {
-      return res.status(404).json({ success: false, message: "Category not found" });
+
+    if (!category) return res.status(404).json({ success: false, message: "Category not found" });
+
+    // Replace image in Cloudinary
+    if (req.file) {
+      if (category.public_id) {
+        await cloudinary.uploader.destroy(category.public_id);
+      }
+      category.image = req.file.path;
+      category.public_id = req.file.filename;
     }
 
-    // Update name and status
     if (Categoryname) category.Categoryname = Categoryname;
     if (typeof isActive !== "undefined") category.isActive = isActive;
 
-    // ✅ Update image if a new file was uploaded
-    if (req.file) {
-      category.image = req.file.path;
-    }
-
     await category.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Category updated successfully",
-      category,
-    });
+    res.status(200).json({ success: true, message: "Category updated successfully", category });
   } catch (error) {
     console.error("❌ Update Category Error:", error);
     res.status(500).json({ success: false, message: "Server error", error });
   }
 };
 
-
-// Delete Category
+// Delete Category (remove from Cloudinary)
 export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const category = await Category.findByIdAndDelete(id);
-
+    const category = await Category.findById(id);
     if (!category) {
       return res.status(404).json({ success: false, message: "Category not found" });
     }
 
-    res.status(200).json({ success: true, message: "Category deleted" });
+    // Delete from Cloudinary
+    if (category.public_id) {
+      await cloudinary.uploader.destroy(category.public_id);
+    }
+
+    await category.deleteOne();
+
+    res.status(200).json({ success: true, message: "Category deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error", error });
   }
