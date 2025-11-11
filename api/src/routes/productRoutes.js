@@ -15,10 +15,10 @@ const productRouter = express.Router();
 import upload from "../middleware/Upload.js";
 
 // Routes
-productRouter.post("/createProduct", upload.array("image",5), createProduct);
+productRouter.post("/createProduct", upload.any(), createProduct);
 productRouter.get("/getAllProducts", getAllProducts);
 productRouter.get("/getProductById/:id", getProductById);
-productRouter.put("/:id", upload.array("image",5), updateProduct);
+productRouter.put("/:id", upload.any(), updateProduct);
 productRouter.delete("/:id", deleteProduct);
 productRouter.get("/getProductsByCategory/:id", getProductsByCategory);
 productRouter.get("/latestTrends", getLatestTrends);

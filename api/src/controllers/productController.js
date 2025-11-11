@@ -10,61 +10,87 @@ export const createProduct = async (req, res) => {
       category,
       brandName,
       gender,
-      sizes,
+      fabric,
+      pattern,
       description,
       tagNumber,
-      inStock,
       oldPrice,
       discount,
       tax,
       isNewArrival,
       isLatestTrend,
-      images, 
     } = req.body;
 
-    if (!req.files || req.files.length === 0) {
-  return res.status(400).json({
-    success: false,
-    message: "At least one image file is required",
-  });
-}
+    // Parse JSON variants
+    const variants = JSON.parse(req.body.variants || "[]");
 
-const imageArray = req.files.map((file) => ({
-  url: file.path,
-  public_id: file.filename,
-}));
-
-    // 🧮 Auto price calculation
-    let price = oldPrice;
-    if (oldPrice && discount) {
-      price = Math.round(oldPrice - (oldPrice * discount) / 100);
+    if (!productName || !category || !variants.length) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Product name, category, and at least one color variant are required.",
+      });
     }
 
-  
+    // 🔹 Multer-storage-cloudinary provides all files in req.files (array)
+    const uploadedVariants = [];
 
+    for (const variant of variants) {
+      const { colorName, colorCode, stock } = variant;
+      const variantImages = [];
+
+      // Find files for this variant by fieldname (e.g. "black", "skyblue")
+      const variantFiles =
+        req.files?.filter(
+          (file) => file.fieldname === colorName
+        ) || [];
+
+      for (const file of variantFiles) {
+        // Cloudinary auto-upload handled by multer-storage-cloudinary
+        variantImages.push({
+          url: file.path, // cloudinary image URL
+          public_id: file.filename, // public_id from Cloudinary
+        });
+      }
+
+      uploadedVariants.push({
+        colorName,
+        colorCode,
+        images: variantImages,
+        stock: stock || {},
+      });
+    }
+
+    // 🧮 Calculate discounted price
+    const price =
+      oldPrice && discount
+        ? Math.round(oldPrice - (oldPrice * discount) / 100)
+        : oldPrice;
+
+    // ✅ Create product
     const newProduct = new Product({
       productName,
       category,
       brandName,
       gender,
-      sizes,
+      fabric,
+      pattern,
       description,
       tagNumber,
-      inStock,
       oldPrice,
       price,
       discount,
       tax,
       isNewArrival,
       isLatestTrend,
-      images: imageArray,
+      variants: uploadedVariants,
     });
 
     await newProduct.save();
 
     res.status(201).json({
       success: true,
-      message: "Product created successfully!",
+      message: "✅ Product with Cloudinary images created successfully!",
       product: newProduct,
     });
   } catch (error) {
